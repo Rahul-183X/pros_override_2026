@@ -5,6 +5,20 @@
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 namespace {
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::Imu inertial(17);
@@ -26,17 +40,21 @@ const char* date_text() {
 }
 
 void draw_cursor(bool visible) {
+	// printf("[TRACE] Entering draw_cursor visible=%d\n", visible);  
+
+	int old_cursor_position = 0;
 	const int field_positions[5] = {0, 3, 6, 9, 11};
 	char cursor_text[15] = {};
 	const int field = cursor_column / 2;
 	char field_value[3];
 	std::snprintf(field_value, sizeof(field_value), "%02d", date_values[field]);
+	// Clear the cursor text and set the current field to be highlighted
 	for (int index = 0; index < 14; ++index) cursor_text[index] = ' ';
 	cursor_text[field_positions[field]] = '[';
 	cursor_text[field_positions[field] + 1] = field_value[0];
 	cursor_text[field_positions[field] + 2] = field_value[1];
 	cursor_text[field_positions[field] + 3] = ']';
-
+	controller.set_text(1, 0, " ");
 
 	if (displayed_cursor_column < 0) {
 		controller.clear_line(1);
@@ -44,22 +62,66 @@ void draw_cursor(bool visible) {
 //		controller.set_text(1, 0, "              ");		
 		controller.set_text(0, 0, "_");
 	}
+// 	// Update the cursor position based on the controller input
+// 	if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+// 		old_cursor_position = old_cursor_position  + 1;
+// 	}
+// 	if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+// 		old_cursor_position = old_cursor_position  - 1;
+// 	}
+// 	if (displayed_cursor_column < 1) {
+// 		controller.clear_line(2);
+// 	} else {
+// //		/*controller.set_text(1, 0, "             ");	Clear the previous cursor line */
+// 		controller.set_text(2, old_cursor_position, "_"); /* Sets the curor position to blink */
+// 		pros::delay(50); /* Waits the cusror blink timer */
+// 		/*controller.clear_line(0);*/
+// 	}
 
-	if (visible) 
-	{ controller.set_text(1, 0, cursor_text);}
-	
+	if (visible) {
+		/*TRACE("It came to the visible part of the draw_cursor function\n");*/
+		controller.set_text(1, 0, cursor_text);
+	} else {
+		//controller.set_text(1, 0, "             ");
+		controller.set_text(0, cursor_column, "_");
+	}
+
 	displayed_cursor_column = cursor_column;
 
-	printf("Cursor: %s,displayed_cursor_column: %d \n", cursor_text, displayed_cursor_column);
+	// printf("Cursor: %s,displayed_cursor_column: %d visible: %d \n", cursor_text, displayed_cursor_column, visible);
 }
 
 void show_date() {
-	controller.set_text(0, 0, date_text());
-	draw_cursor(true);
-	controller.set_text(2, 0, "UP/DN  L/R  A");
+	// TRACE("Entering show_date\n");
+	int32_t error_code = 0;
+	error_code = controller.set_text(0, 0, date_text());
+	if (error_code != 1) {
+		printf("Error setting column %d,date error: %d\n",displayed_cursor_column, error_code);
+	}
+	pros::delay(50);
+	// error_code = controller.set_text(0, cursor_column, "_");
+	// 	if (error_code != 1) {
+	// 	printf("Error vaazhli column %d,date error: %d\n",displayed_cursor_column, error_code);
+	// }
+	// TRACE("Date text: %s\n");
+	//draw_cursor(true);
+	// pros::delay(10);
+
+	// error_code = controller.set_text(0, 0, date_text());
+	// if (error_code != 1) {
+	// 	printf("Error setting column %d,date error: %d\n",displayed_cursor_column, error_code);
+	// }
+	// TRACE("cursor drawn\n");
+	// error_code = controller.set_text(2, 0, "UP/DN  L/R  A");
+	// 	if (error_code != 1) {
+	// 	printf("Error arrow column %d,date error: %d\n",displayed_cursor_column, error_code);
+	// }
+	TRACE("Exiting show_date\n");
 }
 
 void load_recent_date() {
+	TRACE("Entering load_recent_date\n");
+
 	if (!pros::usd::is_installed()) {
 		controller.set_text(2, 0, "Insert SD card");
 		return;
@@ -80,6 +142,8 @@ void load_recent_date() {
 }
 
 void save_date_to_sd() {
+	TRACE("Entering save_date_to_sd\n");
+
 	if (!pros::usd::is_installed()) {
 		controller.set_text(2, 0, "Error: no SD card");
 		return;
@@ -107,6 +171,8 @@ void save_date_to_sd() {
 }
 
 void edit_date_screen() {
+	TRACE("Entering edit_date_screen\n");
+
 	const std::uint32_t start = pros::millis();
 	bool previous_up = false;
 	bool previous_down = false;
@@ -118,6 +184,8 @@ void edit_date_screen() {
 	show_date();
 
 	while (pros::millis() - start < 300000 && !log_file_created) {
+		//TRACE("Entering edit_date_screen loop\n");
+
 		const std::uint32_t now = pros::millis();
 		const bool up = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
 		const bool down = controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
@@ -126,7 +194,7 @@ void edit_date_screen() {
 		const bool button_a = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
 		const int date_index = cursor_column / 2;
 
-		if (now - last_blink >= 1000) {
+		if (now - last_blink >= 50) {
 			cursor_visible = !cursor_visible;
 			draw_cursor(cursor_visible);
 			last_blink = now;
@@ -146,8 +214,11 @@ void edit_date_screen() {
 			show_date();
 			last_blink = now;
 		}
-		if (left && !previous_left) cursor_column = cursor_column == 0 ? 9 : cursor_column - 1;
-		if (right && !previous_right) cursor_column = cursor_column == 9 ? 0 : cursor_column + 1;
+		// WHen changing from python to C++, the max coulumn position was changed from 1 - 12 to 1 - 9
+		// Because the date has 12 fields 
+		if (left && !previous_left) cursor_column = cursor_column == 0 ? 12 : cursor_column - 1;
+		if (right && !previous_right) cursor_column = cursor_column == 12 ? 0 : cursor_column + 1;
+
 		if ((left && !previous_left) || (right && !previous_right)) {
 			cursor_visible = true;
 			show_date();
@@ -160,7 +231,7 @@ void edit_date_screen() {
 		previous_left = left;
 		previous_right = right;
 		previous_a = button_a;
-		pros::delay(20);
+		pros::delay(50);
 	}
 	controller.clear_line(0);
 }
@@ -198,20 +269,26 @@ void lift_weight() {
 }
 
 void calibrate_sensors() {
+	TRACE("Entering calibrate_sensors\n");
+
 	inertial.reset(false);
 	while (inertial.is_calibrating()) pros::delay(100);
 }
 }  // namespace
 
 void initialize() {
+	TRACE("Entering initialize\n");
 	load_recent_date();
 	calibrate_sensors();
+	
 }
 
 void disabled() {}
-void competition_initialize() {}
-void autonomous() {}
+void competition_initialize() {
 
+
+}
+//void autonomous() {}
 
 /**
  * Runs while the robot is in the disabled state of Field Management System or

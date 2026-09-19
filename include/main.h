@@ -77,4 +77,18 @@ void opcontrol(void);
 //#include <iostream>
 #endif
 
+#ifdef __cplusplus
+/**
+ * adding project specific headers  
+ */
+#include <cstdio>
+
+#define TRACE(message) \
+    do { \
+        printf("[TRACE] %s: %s\n", __FUNCTION__, message); \
+        fflush(stdout); \
+    } while (false)
+    
+#endif
+
 #endif  // _PROS_MAIN_H_
