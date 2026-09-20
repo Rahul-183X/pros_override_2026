@@ -1,4 +1,6 @@
 #include "main.h"
+//#include "lemlib/api.hpp"
+#include "lemlib/chassis/trackingWheel.hpp"
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -194,7 +196,7 @@ void edit_date_screen() {
 		const bool button_a = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
 		const int date_index = cursor_column / 2;
 
-		if (now - last_blink >= 50) {
+		if (now - last_blink >= 200) {
 			cursor_visible = !cursor_visible;
 			draw_cursor(cursor_visible);
 			last_blink = now;
@@ -274,11 +276,48 @@ void calibrate_sensors() {
 	inertial.reset(false);
 	while (inertial.is_calibrating()) pros::delay(100);
 }
+
+
+
+
+void joystick() {
+pros::MotorGroup left_motors({-1, 10}, pros::MotorGearset::green); // left motors use 600 RPM cartridges
+pros::MotorGroup right_motors({-11,20 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
+// drivetrain settings
+lemlib::Drivetrain drivetrain(&left_motors, // left motor group
+                              	&right_motors, // right motor group
+                              	11, // 10 inch track width
+                             	lemlib::Omniwheel::NEW_275, // using new 4" omnis
+                             	360, // drivetrain rpm is 360
+                             	2 // horizontal drift is 2 (for now)
+	);
+	// horizontal tracking wheel encoder
+pros::Rotation horizontal_encoder(20);
+// vertical tracking wheel encoder
+pros::adi::Encoder vertical_encoder('C', 'D', true);
+// horizontal tracking wheel
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_275, -5.75);
+// vertical tracking wheel
+//lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
+	// create an imu on port 10
+	//pros::Imu imu(9);
+lemlib::OdomSensors sensors(&horizontal_tracking_wheel, // horizontal tracking wheel 1
+                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
+                            //&imu // inertial sensor
+);
+	
+
+
+
+
 }  // namespace
 
 void initialize() {
 	TRACE("Entering initialize\n");
 	load_recent_date();
+	edit_date_screen();
+	if (!log_file_created) save_date_to_sd();
+	TRACE("Start callibration\n");
 	calibrate_sensors();
 	
 }
@@ -288,7 +327,7 @@ void competition_initialize() {
 
 
 }
-//void autonomous() {}
+void autonomous() {}
 
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -335,8 +374,6 @@ void competition_initialize() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	edit_date_screen();
-	if (!log_file_created) save_date_to_sd();
 	lift_weight();
 }
 
@@ -346,3 +383,4 @@ void opcontrol() {
 
 
 
+}
