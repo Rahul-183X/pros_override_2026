@@ -1,0 +1,19 @@
+/**
+ * \file logger.hpp
+ *
+ * Contains definitions for the logger module.
+ *
+ */
+
+#pragma once
+
+#include "main.h"
+
+namespace logger{
+    extern bool log_file_created;
+    extern char file_name[];
+    void load_recent_date();
+    void save_date_to_sd();
+    void edit_date_screen();
+    void calibrate_sensors();
+}

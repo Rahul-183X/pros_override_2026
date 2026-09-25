@@ -1,269 +1,39 @@
 #include "main.h"
-//#include "lemlib/api.hpp"
+#include "logger.hpp"
+#include "robot.hpp"
+#include "lemlib/api.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
+
+namespace Wall_e{
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-namespace Drivetrain{
-pros::Controller controller(pros::E_CONTROLLER_MASTER);
-pros::Imu inertial(17);
-pros::Motor arm_left(5, pros::MotorGears::red);
-pros::Motor arm_right(15, pros::MotorGears::red);
-
-int date_values[5] = {26, 8, 16, 5, 30};
-int cursor_column = 0;
-int cursor_row = 0;
-int displayed_cursor_column = -1;
-bool log_file_created = false;
-char file_name[32] = "default.csv";
-
-const char* date_text() {
-	static char text[32];
-	std::snprintf(text, sizeof(text), "%02d/%02d/%02d-%02d:%02d", date_values[0],
-	              date_values[1], date_values[2], date_values[3], date_values[4]);
-	return text;
-}
-
-void draw_cursor(bool visible) {
-	// printf("[TRACE] Entering draw_cursor visible=%d\n", visible);  
-
-	int old_cursor_position = 0;
-	const int field_positions[5] = {0, 3, 6, 9, 11};
-	char cursor_text[15] = {};
-	const int field = cursor_column / 2;
-	char field_value[3];
-	std::snprintf(field_value, sizeof(field_value), "%02d", date_values[field]);
-	// Clear the cursor text and set the current field to be highlighted
-	for (int index = 0; index < 14; ++index) cursor_text[index] = ' ';
-	cursor_text[field_positions[field]] = '[';
-	cursor_text[field_positions[field] + 1] = field_value[0];
-	cursor_text[field_positions[field] + 2] = field_value[1];
-	cursor_text[field_positions[field] + 3] = ']';
-	controller.set_text(1, 0, " ");
-
-	if (displayed_cursor_column < 0) {
-		controller.clear_line(1);
-	} else {
-//		controller.set_text(1, 0, "              ");		
-		controller.set_text(0, 0, "_");
-	}
-// 	// Update the cursor position based on the controller input
-// 	if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
-// 		old_cursor_position = old_cursor_position  + 1;
-// 	}
-// 	if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-// 		old_cursor_position = old_cursor_position  - 1;
-// 	}
-// 	if (displayed_cursor_column < 1) {
-// 		controller.clear_line(2);
-// 	} else {
-// //		/*controller.set_text(1, 0, "             ");	Clear the previous cursor line */
-// 		controller.set_text(2, old_cursor_position, "_"); /* Sets the curor position to blink */
-// 		pros::delay(50); /* Waits the cusror blink timer */
-// 		/*controller.clear_line(0);*/
-// 	}
-
-	if (visible) {
-		/*TRACE("It came to the visible part of the draw_cursor function\n");*/
-		controller.set_text(1, 0, cursor_text);
-	} else {
-		//controller.set_text(1, 0, "             ");
-		controller.set_text(0, cursor_column, "_");
-	}
-
-	displayed_cursor_column = cursor_column;
-
-	// printf("Cursor: %s,displayed_cursor_column: %d visible: %d \n", cursor_text, displayed_cursor_column, visible);
-}
-
-void show_date() {
-	// TRACE("Entering show_date\n");
-	int32_t error_code = 0;
-	error_code = controller.set_text(0, 0, date_text());
-	if (error_code != 1) {
-		printf("Error setting column %d,date error: %d\n",displayed_cursor_column, error_code);
-	}
-	pros::delay(50);
-	// error_code = controller.set_text(0, cursor_column, "_");
-	// 	if (error_code != 1) {
-	// 	printf("Error vaazhli column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
-	// TRACE("Date text: %s\n");
-	//draw_cursor(true);
-	// pros::delay(10);
-
-	// error_code = controller.set_text(0, 0, date_text());
-	// if (error_code != 1) {
-	// 	printf("Error setting column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
-	// TRACE("cursor drawn\n");
-	// error_code = controller.set_text(2, 0, "UP/DN  L/R  A");
-	// 	if (error_code != 1) {
-	// 	printf("Error arrow column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
-	TRACE("Exiting show_date\n");
-}
-
-void load_recent_date() {
-	TRACE("Entering load_recent_date\n");
-
-	if (!pros::usd::is_installed()) {
-		controller.set_text(2, 0, "Insert SD card");
-		return;
-	}
-
-	FILE* file = std::fopen("recent_file.txt", "r");
-	if (file == nullptr) return;
-	char content[32] = {};
-	if (std::fgets(content, sizeof(content), file) != nullptr) {
-		int loaded[5];
-		if (std::sscanf(content, "%d-%d-%d-%d-%d", &loaded[0], &loaded[1], &loaded[2],
-		                &loaded[3], &loaded[4]) == 5) {
-			for (int index = 0; index < 5; ++index) date_values[index] = loaded[index];
-			date_values[4] = (date_values[4] + 1) % 60;
-		}
-	}
-	std::fclose(file);
-}
-
-void save_date_to_sd() {
-	TRACE("Entering save_date_to_sd\n");
-
-	if (!pros::usd::is_installed()) {
-		controller.set_text(2, 0, "Error: no SD card");
-		return;
-	}
-
-	std::snprintf(file_name, sizeof(file_name), "%02d-%02d-%02d-%02d-%02d.csv",
-	              date_values[0], date_values[1], date_values[2], date_values[3],
-	              date_values[4]);
-	FILE* log_file = std::fopen(file_name, "w");
-	if (log_file == nullptr) {
-		controller.set_text(2, 0, "File create failed");
-		return;
-	}
-	std::fprintf(log_file, "timestamp,arm_position_deg,arm_velocity_rpm,arm_torque_nm,arm_power_w,arm_current_a,arm_right_position_deg,arm_right_velocity_rpm,arm_right_torque_nm,arm_right_power_w,arm_right_current_a\n");
-	std::fclose(log_file);
-
-	FILE* recent_file = std::fopen("recent_file.txt", "w");
-	if (recent_file != nullptr) {
-		std::fprintf(recent_file, "%02d-%02d-%02d-%02d-%02d", date_values[0], date_values[1],
-		             date_values[2], date_values[3], date_values[4]);
-		std::fclose(recent_file);
-	}
-	log_file_created = true;
-	controller.set_text(2, 0, "Saved date log");
-}
-
-void edit_date_screen() {
-	TRACE("Entering edit_date_screen\n");
-
-	const std::uint32_t start = pros::millis();
-	bool previous_up = false;
-	bool previous_down = false;
-	bool previous_left = false;
-	bool previous_right = false;
-	bool previous_a = false;
-	bool cursor_visible = true;
-	std::uint32_t last_blink = pros::millis();
-	show_date();
-
-	while (pros::millis() - start < 300000 && !log_file_created) {
-		//TRACE("Entering edit_date_screen loop\n");
-
-		const std::uint32_t now = pros::millis();
-		const bool up = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
-		const bool down = controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
-		const bool left = controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT);
-		const bool right = controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-		const bool button_a = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
-		const int date_index = cursor_column / 2;
-
-		if (now - last_blink >= 200) {
-			cursor_visible = !cursor_visible;
-			draw_cursor(cursor_visible);
-			last_blink = now;
-		}
-
-		if (up && !previous_up) {
-			const int limits[5] = {99, 12, 31, 23, 59};
-			date_values[date_index] = date_values[date_index] % limits[date_index] + 1;
-			cursor_visible = true;
-			show_date();
-			last_blink = now;
-		}
-		if (down && !previous_down) {
-			const int limits[5] = {99, 12, 31, 23, 59};
-			date_values[date_index] = (date_values[date_index] + limits[date_index] - 2) % limits[date_index] + 1;
-			cursor_visible = true;
-			show_date();
-			last_blink = now;
-		}
-		// WHen changing from python to C++, the max coulumn position was changed from 1 - 12 to 1 - 9
-		// Because the date has 12 fields 
-		if (left && !previous_left) cursor_column = cursor_column == 0 ? 12 : cursor_column - 1;
-		if (right && !previous_right) cursor_column = cursor_column == 12 ? 0 : cursor_column + 1;
-
-		if ((left && !previous_left) || (right && !previous_right)) {
-			cursor_visible = true;
-			show_date();
-			last_blink = now;
-		}
-		if (button_a && !previous_a) save_date_to_sd();
-
-		previous_up = up;
-		previous_down = down;
-		previous_left = left;
-		previous_right = right;
-		previous_a = button_a;
-		pros::delay(50);
-	}
-	controller.clear_line(0);
-}
 
 void lift_weight() {
-	arm_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	arm_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	controller.set_text(0, 0, "Arm logging");
-	controller.clear_line(1);
-	controller.clear_line(2);
+	robot::arm_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	robot::arm_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	robot::controller.set_text(0, 0, "Arm logging");
+	robot::controller.clear_line(1);
+	robot::controller.clear_line(2);
 
 	while (true) {
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-			arm_left.move_velocity(50);
-			arm_right.move_velocity(-50);
-		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-			arm_left.move_velocity(-50);
-			arm_right.move_velocity(50);
+		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+			robot::arm_left.move_velocity(50);
+			robot::arm_right.move_velocity(-50);
+		} else if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+			robot::arm_left.move_velocity(-50);
+			robot::arm_right.move_velocity(50);
 		} else {
-			arm_left.move_velocity(0);
-			arm_right.move_velocity(0);
+			robot::arm_left.move_velocity(0);
+			robot::arm_right.move_velocity(0);
 		}
 
-		FILE* file = std::fopen(file_name, "a");
+		FILE* file = std::fopen(logger::file_name, "a");
 		if (file != nullptr) {
 			std::fprintf(file, "%.3f,%.2f,%.2f,%.3f,%.3f,%.3f,%.2f,%.2f,%.3f,%.3f,%.3f\n",
-			             pros::millis() / 1000.0, arm_left.get_position(), arm_left.get_actual_velocity(),
-			             arm_left.get_torque(), arm_left.get_power(), arm_left.get_current_draw() / 1000.0,
-			             arm_right.get_position(), arm_right.get_actual_velocity(), arm_right.get_torque(),
-			             arm_right.get_power(), arm_right.get_current_draw() / 1000.0);
+			             pros::millis() / 1000.0, robot::arm_left.get_position(), robot::arm_left.get_actual_velocity(),
+			             robot::arm_left.get_torque(), robot::arm_left.get_power(), robot::arm_left.get_current_draw() / 1000.0,
+			             robot::arm_right.get_position(), robot::arm_right.get_actual_velocity(), robot::arm_right.get_torque(),
+			             robot::arm_right.get_power(), robot::arm_right.get_current_draw() / 1000.0);
 			std::fclose(file);
 		}
 		pros::delay(100);
@@ -273,91 +43,85 @@ void lift_weight() {
 void calibrate_sensors() {
 	TRACE("Entering calibrate_sensors\n");
 
-	inertial.reset(false);
-	while (inertial.is_calibrating()) pros::delay(100);
+	robot::inertial.reset(false);
+	while (robot::inertial.is_calibrating()) pros::delay(100);
 }
 
+} // namespace Wall_e
 
 
+namespace Drivetrain {
 
-void joystick() {
-pros::MotorGroup left_motors({-1, 10}, pros::MotorGearset::green); // left motors use 600 RPM cartridges
-pros::MotorGroup right_motors({-11,20 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
-// drivetrain settings
-lemlib::Drivetrain drivetrain(&left_motors, // left motor group
-                              	&right_motors, // right motor group
-                              	11, // 10 inch track width
-                             	lemlib::Omniwheel::NEW_275, // using new 4" omnis
-                             	360, // drivetrain rpm is 360
-                             	2 // horizontal drift is 2 (for now)
-	);
+	// drivetrain settings
+	lemlib::Drivetrain drivetrain(&robot::left_motors, // left motor group
+									&robot::right_motors, // right motor group
+									11, // 10 inch track width
+									lemlib::Omniwheel::NEW_275, // using new 4" omnis
+									360, // drivetrain rpm is 360
+									2 // horizontal drift is 2 (for now)
+		);
+
 	// horizontal tracking wheel encoder
-pros::Rotation horizontal_encoder(20);
-// vertical tracking wheel encoder
-pros::adi::Encoder vertical_encoder('C', 'D', true);
-// horizontal tracking wheel
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_275, -5.75);
-// vertical tracking wheel
-//lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
-	// create an imu on port 10
-	//pros::Imu imu(9);
-lemlib::OdomSensors sensors(&horizontal_tracking_wheel, // horizontal tracking wheel 1
-                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            //&imu // inertial sensor
-);
-// lateral PID controller
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              3, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              20 // maximum acceleration (slew)
-);
+	pros::Rotation horizontal_encoder(20);
+	// vertical tracking wheel encoder
+	pros::adi::Encoder vertical_encoder('C', 'D', true);
+	// horizontal tracking wheel
+	lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_275, -5.75);
+	// vertical tracking wheel
+	//lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
+		// create an imu on port 10
+		//pros::Imu imu(9);
+	lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1
+								nullptr, // vertical tracking wheel 2
+								&horizontal_tracking_wheel, // horizontal tracking wheel 1
+								nullptr, // horizontal tracking wheel 2
+								nullptr // inertial sensor
+	);
+	// lateral PID controller
+	lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
+												0, // integral gain (kI)
+												3, // derivative gain (kD)
+												3, // anti windup
+												1, // small error range, in inches
+												100, // small error range timeout, in milliseconds
+												3, // large error range, in inches
+												500, // large error range timeout, in milliseconds
+												20 // maximum acceleration (slew)
+	);
 
-// angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              10, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in degrees
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in degrees
-                                              500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-);
-// lateral PID controller
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              3, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              20 // maximum acceleration (slew)
-);
+	// angular PID controller
+	lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
+												0, // integral gain (kI)
+												10, // derivative gain (kD)
+												3, // anti windup
+												1, // small error range, in degrees
+												100, // small error range timeout, in milliseconds
+												3, // large error range, in degrees
+												500, // large error range timeout, in milliseconds
+												0 // maximum acceleration (slew)
+	);
+	// input curve for throttle input during driver control
+	lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
+										10, // minimum output where drivetrain will move out of 127
+										1.019 // expo curve gain
+	);
 
-// angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              10, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in degrees
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in degrees
-                                              500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-);
-// create the chassis
-lemlib::Chassis chassis(drivetrain, // drivetrain settings
-                        lateral_controller, // lateral PID settings
-                        angular_controller, // angular PID settings
-                        sensors // odometry sensors
-);
-pros::Controller controller(pros::E_CONTROLLER_MASTER);
+	// input curve for steer input during driver control
+	lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
+									10, // minimum output where drivetrain will move out of 127
+									1.019 // expo curve gain
+	);
+
+	// create the chassis
+	lemlib::Chassis chassis(drivetrain,
+							lateral_controller,
+							angular_controller,
+							sensors,
+							&throttle_curve,
+							&steer_curve
+	);
+
+}// namespace Drivetrain
 
 // void opcontrol() {
 //     // loop forever
@@ -366,8 +130,7 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 //         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
 //         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-//         // move the robot
-//         chassis.arcade(leftY, rightX);
+
 
 //         // delay to save resources
 //         pros::delay(25);
@@ -380,120 +143,62 @@ void opcontrol() {
     // loop forever
     while (true) {
         // get left y and right x positions
-        int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+		int leftY = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+		int rightX = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
         // move the robot
-        chassis.curvature(leftY, rightX);
+        Drivetrain::chassis.curvature(leftY, rightX);
+
+
+		//move the robot using arcade drive
+		//Drivetrain::chassis.arcade(leftY, rightX);
 
         // delay to save resources
         pros::delay(25);
     }
-
-	// input curve for throttle input during driver control
-lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
-                                     10, // minimum output where drivetrain will move out of 127
-                                     1.019 // expo curve gain
-);
-
-// input curve for steer input during driver control
-lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
-                                  10, // minimum output where drivetrain will move out of 127
-                                  1.019 // expo curve gain
-);
-
-// create the chassis
-lemlib::Chassis chassis(drivetrain,
-                        lateral_controller,
-                        angular_controller,
-                        sensors,
-                        &throttle_curve, 
-                        &steer_curve
-);
-
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              10, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-);
-void autonomous() {
-    // set position to x:0, y:0, heading:0
-    chassis.setPose(0, 0, 0);
-    // turn to face heading 90 with a very long timeout
-    chassis.turnToHeading(90, 100000);
-	chassis.moveToPoint(0, 48, 10000);
-}
-
-
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              3, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              20 // maximum acceleration (slew)
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
 
-}  // namespace Drivetrain
 
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
 void initialize() {
-	using namespace gamemode;
 	TRACE("Entering initialize\n");
-	load_recent_date();
-	edit_date_screen();
-	if (!log_file_created) save_date_to_sd();
+	// initialize the controller
+	robot::controller.clear();
+
+	logger::load_recent_date();
+	logger::edit_date_screen();
+	if (!logger::log_file_created) logger::save_date_to_sd();
 	TRACE("Start callibration\n");
-	calibrate_sensors();
+	Wall_e::calibrate_sensors();
 	pros::lcd::initialize(); // initialize brain screen
     //calibrate(); // calibrate sensors
     // print position to brain screen
     pros::Task screen_task([&]() {
         while (true) {
             // print robot location to the brain screen
-            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            pros::lcd::print(0, "X: %f", Drivetrain::chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", Drivetrain::chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", Drivetrain::chassis.getPose().theta); // heading
             // delay to save resources
             pros::delay(20);
         }
-	
+	});
 }
 
-void disabled() {}
-void competition_initialize() {
-
-
-}
-void autonomous() {}
 
 /**
  * Runs while the robot is in the disabled state of Field Management System or
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
+void disabled() {}
 /* disabled() is implemented above. */
 
 /**
@@ -505,6 +210,9 @@ void autonomous() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
+void competition_initialize() {
+
+}
 /* competition_initialize() is implemented above. */
 
 /**
@@ -518,6 +226,13 @@ void autonomous() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+void autonomous() {
+    // set position to x:0, y:0, heading:0
+    Drivetrain::chassis.setPose(0, 0, 0);
+    // turn to face heading 90 with a very long timeout
+    Drivetrain::chassis.turnToHeading(90, 100000);
+	Drivetrain::chassis.moveToPoint(0, 48, 10000);
+}
 /* autonomous() is implemented above. */
 
 /**
@@ -533,13 +248,3 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() {
-	lift_weight();
-}
-
-
-
-
-
-
-

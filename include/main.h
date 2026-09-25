@@ -83,12 +83,15 @@ void opcontrol(void);
  */
 #include <cstdio>
 
-#define TRACE(message) \
+#define TRACE(message, ...) \
     do { \
-        printf("[TRACE] %s: %s\n", __FUNCTION__, message); \
+        printf("[TRACE] %s: " message "\n", __FUNCTION__, ##__VA_ARGS__); \
         fflush(stdout); \
     } while (false)
     
 #endif
+
+// Print debug messages using TRACE macro with format specifiers, e.g., TRACE("Value: %d", value).
+
 
 #endif  // _PROS_MAIN_H_
