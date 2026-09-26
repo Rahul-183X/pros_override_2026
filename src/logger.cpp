@@ -33,18 +33,23 @@ const char* date_text() {
 void draw_cursor(bool visible) {
 	printf("[TRACE] @ %d Entering draw_cursor visible=%d\n", pros::millis(), visible);  
 
-	const int field_positions[5] = {0, 3, 6, 9, 11};
+	const int field_positions[5] = {0, 3, 6, 9, 12};
 	char cursor_text[16] = {};
 	const int field = cursor_column;
 	char field_value[3];
+	
+	//initialize the cursor text with the current date
+	std::snprintf(cursor_text, sizeof(cursor_text) - 1, "%s", date_text());
+	//without explicitly null-terminating crashes can occur, snprintf ensures null-termination
+	cursor_text[sizeof(cursor_text) - 1] = END_OF_STRING;
+
 	std::snprintf(field_value, sizeof(field_value), "%02d", date_values[field]);
-	// Clear the cursor text and set the current field to be highlighted
-	for (int index = 0; index < 15; ++index) cursor_text[index] = ' ';
-	cursor_text[15] = '\0';
-	cursor_text[field_positions[field]] = '[';
-	cursor_text[field_positions[field] + 1] = field_value[0];
-	cursor_text[field_positions[field] + 2] = field_value[1];
-	cursor_text[field_positions[field] + 3] = ']';
+
+
+	//updating the cursor text with the current field value based on visibility
+	cursor_text[field_positions[field]] = visible ? field_value[0] : '_';
+	cursor_text[field_positions[field] + 1] = visible ? field_value[1] : '_';
+
 	TRACE("Drawing cursor state %d at column %d\n", visible, cursor_column);
 	if (robot::controller.is_connected() == false) {
 		printf("Controller is not connected\n");
@@ -52,15 +57,14 @@ void draw_cursor(bool visible) {
 	}
 
 	// Send one complete line per blink state; controller text updates are rate-limited.
-	const char* display_text = visible ? cursor_text : "              ";
-	const int ret_val = robot::controller.set_text(1, 0, display_text);
+	const char* display_text = cursor_text;
+	const int ret_val = robot::controller.set_text(0, 0, display_text);
 	if (ret_val != 1) {
 		printf("Error drawing cursor at column %d, ret_val: %d, errno: %d\n",
 		       cursor_column, ret_val, errno);
 	}
 
 	displayed_cursor_column = cursor_column;
-	// printf("Cursor: %s,displayed_cursor_column: %d visible: %d \n", cursor_text, displayed_cursor_column, visible);
 }
 
 
@@ -79,25 +83,11 @@ void show_date() {
 		printf("Error setting date, column %d, ret_val: %d, errno: %d\n",
 		       displayed_cursor_column, error_code, errno);
 	}
-	//pros::delay(50);
-	// error_code = controller.set_text(0, cursor_column, "_");
-	// 	if (error_code != 1) {
-	// 	printf("Error vaazhli column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
-	// TRACE("Date text: %s\n");
+
 	
 	draw_cursor(true);
 	pros::delay(10);
 
-	// error_code = controller.set_text(0, 0, date_text());
-	// if (error_code != 1) {
-	// 	printf("Error setting column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
-	// TRACE("cursor drawn\n");
-	// error_code = controller.set_text(2, 0, "UP/DN  L/R  A");
-	// 	if (error_code != 1) {
-	// 	printf("Error arrow column %d,date error: %d\n",displayed_cursor_column, error_code);
-	// }
 	TRACE("Exiting show_date\n");
 }
 
@@ -155,7 +145,11 @@ void save_date_to_sd() {
 		std::fclose(recent_file);
 	}
 	log_file_created = true;
-	robot::controller.set_text(2, 0, "Saved date log");
+	robot::controller.set_text(2, 0, "I am Thankful for...");
+	//after updating the controller 50ms delay is required to ensure the text is displayed correctly
+	pros::delay(50);
+
+	robot::controller.set_text(0, 0, "Saved date log");
 }
 
 /**

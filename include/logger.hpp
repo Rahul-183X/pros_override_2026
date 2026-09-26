@@ -10,6 +10,8 @@
 #include "main.h"
 
 namespace logger{
+    #define END_OF_STRING '\0'
+    
     extern bool log_file_created;
     extern char file_name[];
     void load_recent_date();
