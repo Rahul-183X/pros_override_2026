@@ -25,9 +25,9 @@ pros::Motor arm_left(8, pros::MotorGears::red);
 pros::Motor arm_right(-18, pros::MotorGears::red);
 
 // Wrist motors
-pros::Motor wrist_left(7, pros::MotorGears::red);
+pros::Motor wrist_left(5, pros::MotorGears::red);
 
 // Claw motors
-pros::Motor claw(6, pros::MotorGears::red); 
+pros::Motor claw(4, pros::MotorGears::red); 
 
 } // namespace robot
