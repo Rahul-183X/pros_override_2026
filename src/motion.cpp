@@ -1,3 +1,5 @@
+#include "motion.hpp"
+#include "robot.hpp"
 
 namespace motion {
 

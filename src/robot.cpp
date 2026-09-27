@@ -4,6 +4,7 @@
 */
 
 #include "robot.hpp"
+#include "pros/gps.hpp"
 
 
 namespace robot {
@@ -12,6 +13,15 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 //Sensors
 pros::Imu inertial(9);
+pros::Rotation rotation_sensor(2); // example rotation sensor on port 2
+pros::GPS gps(3); // example GPS on port 3
+
+//GPS sensor
+double xInitial = 0.0;
+double yInitial = 0.0;
+double headingInitial = 0.0;
+double xOffset = 0.0;
+double yOffset = 0.0;
 
 //Actuators
 
@@ -30,4 +40,23 @@ pros::Motor wrist_left(5, pros::MotorGears::red);
 // Claw motors
 pros::Motor claw(4, pros::MotorGears::red); 
 
+
+/**
+ * Calibrates the robot's sensors.
+ * Currently, it only calibrates the inertial sensor.
+ */
+
+void calibrate_sensors() {
+	TRACE("Entering calibrate_sensors\n");
+
+	inertial.reset(false);
+	while (inertial.is_calibrating()) pros::delay(100);
+
+    rotation_sensor.reset();
+    //while (rotation_sensor.is_calibrating()) pros::delay(100);  
+
+    gps.initialize_full( xInitial,  yInitial,  headingInitial,  xOffset,  yOffset);
+    //while (gps.is_calibrating()) pros::delay(100);  
+
+}
 } // namespace robot
