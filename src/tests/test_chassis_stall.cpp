@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstdio>
 #include <vector>
+namespace tester {
+
+    // TODO: take robot namespace into account for motor IDs
 
 pros::MotorGroup drive_motors({1, -11, 10, -20});
 
@@ -235,3 +238,5 @@ void test_opcontrol() {
         pros::delay(20);
     }
 }
+
+} // namespace tester

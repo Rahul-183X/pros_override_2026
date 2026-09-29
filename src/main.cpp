@@ -2,6 +2,8 @@
 #include "logger.hpp"
 #include "robot.hpp"
 #include "motion.hpp"
+#include "tests/test_chassis_stall.hpp"
+
 #include "lemlib/api.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
 
@@ -63,6 +65,9 @@ void lift_weight() {
 
 
 void opcontrol() {
+
+	tester::test_opcontrol();
+
     // loop forever
     while (true) {
         // get left y and right x positions
