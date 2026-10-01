@@ -1,5 +1,7 @@
 #include "logger.hpp"
+#include "pros/rtos.hpp"
 #include "robot.hpp"
+#include "motion.hpp"
 
 namespace logger{
 
@@ -223,5 +225,23 @@ void edit_date_screen() {
 	robot::controller.clear_line(2);
 }
 
+
+
+
+
+	//
+	void log_to_controller() {
+		//pros::delay(30000);
+		robot::controller.clear();
+		while (true) {
+
+			// log data to the controller screen
+			robot::controller.set_text(0, 0, "X: " + std::to_string(motion::chassis.getPose().x)+ " Y: " + std::to_string(motion::chassis.getPose().y));
+			pros::delay(100);
+			//robot::controller.set_text(1, 0, "Y: " + std::to_string(motion::chassis.getPose().y));
+			robot::controller.set_text(2, 0, "Theta: " + std::to_string(motion::chassis.getPose().theta));
+			pros::delay(100);
+		}
+	}
 
 } //namespace logger

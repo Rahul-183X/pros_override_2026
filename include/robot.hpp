@@ -12,6 +12,8 @@ extern pros::Motor arm_left;
 extern pros::Motor arm_right;
 extern pros::Motor wrist_left;
 extern pros::Motor claw;
+extern pros::MotorGroup arm;
+
 
 void calibrate_sensors();
 } // namespace robot

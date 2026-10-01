@@ -18,4 +18,7 @@ namespace logger{
     void save_date_to_sd();
     void edit_date_screen();
     void calibrate_sensors();
+
+    // Logs the robot's position to the controller screen in a separate task.
+    void log_to_controller();
 }

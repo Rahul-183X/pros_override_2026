@@ -1,5 +1,6 @@
 #include "main.h"
 #include "logger.hpp"
+#include "pros/misc.h"
 #include "robot.hpp"
 #include "motion.hpp"
 #include "tests/test_chassis_stall.hpp"
@@ -20,16 +21,25 @@ void lift_weight() {
 
 	while (true) {
 		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-			robot::arm_left.move_velocity(50);
-			robot::arm_right.move_velocity(-50);
+			//robot::arm_left.move_velocity(50);
+			//robot::arm_right.move_velocity(50);
+			//robot::arm.move_velocity(50);
+			robot::arm.move_velocity(100);
+
 		} else if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-			robot::arm_left.move_velocity(-50);
-			robot::arm_right.move_velocity(50);
+			//robot::arm_left.move_velocity(50);
+			//robot::arm_right.move_velocity(50);
+			robot::arm.move_velocity(-100);
 		} else {
-			robot::arm_left.move_velocity(0);
-			robot::arm_right.move_velocity(0);
+			//robot::arm_left.move_velocity(0);
+			//robot::arm_right.move_velocity(0);
+			robot::arm.move_velocity(0);
 		}
 
+		
+
+		
+#if 0
 		FILE* file = std::fopen(logger::file_name, "a");
 		if (file != nullptr) {
 			std::fprintf(file, "%.3f,%.2f,%.2f,%.3f,%.3f,%.3f,%.2f,%.2f,%.3f,%.3f,%.3f\n",
@@ -39,7 +49,9 @@ void lift_weight() {
 			             robot::arm_right.get_power(), robot::arm_right.get_current_draw() / 1000.0);
 			std::fclose(file);
 		}
-		pros::delay(100);
+#endif
+		pros::delay(10);
+
 	}
 }
 
@@ -66,7 +78,13 @@ void lift_weight() {
 
 void opcontrol() {
 
-	tester::test_opcontrol();
+	//create and start the log_to_controller task
+	pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	log_to_controller_task_handle.resume();
+
+	//create and start the lift_weight task
+	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
+	lift_weight_task_handle.resume();
 
     // loop forever
     while (true) {
@@ -118,7 +136,8 @@ void initialize() {
             pros::delay(20);
         }
 	});
-}
+
+} // end of initialize()
 
 
 /**
@@ -126,7 +145,12 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	TRACE("Entering disabled\n");
+	// run Torque test opcontrol when disabled
+	//tester::test_opcontrol();
+
+}
 /* disabled() is implemented above. */
 
 /**
@@ -155,11 +179,20 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+
+	//create and start the log_to_controller task
+	pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	//log_to_controller_task_handle.resume();
+
+	//create and start the lift_weight task
+	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
+	//lift_weight_task_handle.resume();
+
     // set position to x:0, y:0, heading:0
-    motion::chassis.setPose(0, 0, 0);
+    motion::chassis.setPose(0, 0, -2.29);
     // turn to face heading 90 with a very long timeout
-    motion::chassis.turnToHeading(90, 100000);
-	motion::chassis.moveToPoint(0, 48, 10000);
+    motion::chassis.turnToHeading(90, 1000);
+	motion::chassis.moveToPoint(0, 48, 1000);
 
 }
 /* autonomous() is implemented above. */
