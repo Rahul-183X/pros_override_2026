@@ -1,4 +1,5 @@
 #include "main.h"
+#include "lemlib/asset.hpp"
 #include "logger.hpp"
 #include "pros/misc.h"
 #include "robot.hpp"
@@ -36,7 +37,7 @@ void lift_weight() {
 			robot::arm.move_velocity(0);
 		}
 
-		
+
 
 		
 #if 0
@@ -77,7 +78,7 @@ void lift_weight() {
 
 
 void opcontrol() {
-
+	
 	//create and start the log_to_controller task
 	pros::Task log_to_controller_task_handle(logger::log_to_controller);
 	log_to_controller_task_handle.resume();
@@ -118,13 +119,17 @@ void initialize() {
 	// initialize the controller
 	robot::controller.clear();
 
-	logger::load_recent_date();
-	logger::edit_date_screen();
-	if (!logger::log_file_created) logger::save_date_to_sd();
+	//Do not initialize the 
+	if (! pros::competition::is_connected()) {
+		logger::load_recent_date();
+		logger::edit_date_screen();
+		if (!logger::log_file_created) logger::save_date_to_sd();
+	}
+
 	TRACE("Start callibration\n");
 	robot::calibrate_sensors();
 	pros::lcd::initialize(); // initialize brain screen
-    //calibrate(); // calibrate sensors
+	
     // print position to brain screen
     pros::Task screen_task([&]() {
         while (true) {
@@ -149,7 +154,12 @@ void disabled() {
 	TRACE("Entering disabled\n");
 	// run Torque test opcontrol when disabled
 	//tester::test_opcontrol();
+	
+	logger::load_recent_date();
+	logger::edit_date_screen();
+	if (!logger::log_file_created) logger::save_date_to_sd();
 
+	//logger::save_date_to_sd();
 }
 /* disabled() is implemented above. */
 
@@ -178,22 +188,24 @@ void competition_initialize() {
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+ ASSET(bottom_txt);
 void autonomous() {
 
 	//create and start the log_to_controller task
-	pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	//pros::Task log_to_controller_task_handle(logger::log_to_controller);
 	//log_to_controller_task_handle.resume();
 
 	//create and start the lift_weight task
 	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
 	//lift_weight_task_handle.resume();
 
-    // set position to x:0, y:0, heading:0
-    motion::chassis.setPose(0, 0, -2.29);
-    // turn to face heading 90 with a very long timeout
-    motion::chassis.turnToHeading(90, 1000);
-	motion::chassis.moveToPoint(0, 48, 1000);
+    // // set position to x:0, y:0, heading:0
+    motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
+    // // turn to face heading 90 with a very long timeout
+    // motion::chassis.turnToHeading(90, 1000);
+	// motion::chassis.moveToPoint(0, 48, 1000);
 
+	motion::chassis.follow(bottom_txt, 10.0, 1000);
 }
 /* autonomous() is implemented above. */
 

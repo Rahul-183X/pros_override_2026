@@ -15,5 +15,7 @@ extern pros::Motor claw;
 extern pros::MotorGroup arm;
 
 
+extern pros::GPS gps;
+
 void calibrate_sensors();
 } // namespace robot

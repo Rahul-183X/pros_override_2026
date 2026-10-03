@@ -4,9 +4,11 @@
 */
 
 #include "robot.hpp"
+#include "lemlib/chassis/trackingWheel.hpp"
 #include "pros/gps.hpp"
 #include "pros/motor_group.hpp"
-
+#include "lemlib/api.hpp"
+#include <cmath>
 
 namespace robot {
 
@@ -44,6 +46,10 @@ pros::Motor wrist_left(5, pros::MotorGears::red);
 
 // Claw motors
 pros::Motor claw(4, pros::MotorGears::red); 
+
+//wheels
+//float_t omniwheel = lemlib::Omniwheel::NEW_325();
+
 
 
 /**
