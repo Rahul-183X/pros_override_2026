@@ -37,6 +37,22 @@ void lift_weight() {
 			robot::arm.move_velocity(0);
 		}
 
+		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+			robot::wrist.move_velocity(100);
+		} else if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+			robot::wrist.move_velocity(-100);
+		} else {
+			robot::wrist.move_velocity(0);
+		}
+
+		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+			robot::claw.move_velocity(100);
+		} else if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+			robot::claw.move_velocity(-100);
+		} else {
+			robot::claw.move_velocity(0);
+		}
+
 
 
 		
@@ -94,11 +110,11 @@ void opcontrol() {
 		int rightX = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
         // move the robot
-        motion::chassis.curvature(leftY, rightX);
+        //motion::chassis.curvature(leftY, rightX);
 
 
 		//move the robot using arcade drive
-		motion::chassis.arcade(leftY, rightX);
+		motion::chassis.arcade(rightX, -leftY);
 
         // delay to save resources
         pros::delay(25);
@@ -119,7 +135,7 @@ void initialize() {
 	// initialize the controller
 	robot::controller.clear();
 
-	//Do not initialize the 
+	//Do not initialize this if the robot is connected to the competition control system
 	if (! pros::competition::is_connected()) {
 		logger::load_recent_date();
 		logger::edit_date_screen();
@@ -134,9 +150,16 @@ void initialize() {
     pros::Task screen_task([&]() {
         while (true) {
             // print robot location to the brain screen
-            pros::lcd::print(0, "X: %f", motion::chassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", motion::chassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", motion::chassis.getPose().theta); // heading
+            //pros::lcd::print(0, "X: %f", motion::chassis.getPose().x); // x
+            //pros::lcd::print(1, "Y: %f", motion::chassis.getPose().y); // y
+            //pros::lcd::print(2, "Theta: %f", motion::chassis.getPose().theta); // heading
+
+			
+			pros::lcd::print(0, "X: %0.2f Y: %0.2f Theta: %0.2f", motion::chassis.getPose().x, motion::chassis.getPose().y, motion::chassis.getPose().theta);
+
+			pros::lcd::print(1,"GPS X: %0.2f Y:%0.2f Theta:%0.2f" , robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
+
+
             // delay to save resources
             pros::delay(20);
         }

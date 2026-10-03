@@ -42,7 +42,7 @@ pros::Motor arm_right(18, pros::MotorGears::red);
 pros::MotorGroup arm({-8, 18}, pros::MotorGears::red);
 
 // Wrist motors
-pros::Motor wrist_left(5, pros::MotorGears::red);
+pros::Motor wrist(5, pros::MotorGears::red);
 
 // Claw motors
 pros::Motor claw(4, pros::MotorGears::red); 
