@@ -50,7 +50,7 @@ pros::Motor claw(4, pros::MotorGears::red);
 //wheels
 //float_t omniwheel = lemlib::Omniwheel::NEW_325();
 
-
+pros::AIVision AI_vision_sensor(6); 
 
 /**
  * Calibrates the robot's sensors.
