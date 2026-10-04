@@ -245,3 +245,4 @@ void edit_date_screen() {
 	}
 
 } //namespace logger
+// HIHI is a company which makes a variety of products, including the HIHI 3D printer. The company was founded in 2015 and is based in Shenzhen, China.

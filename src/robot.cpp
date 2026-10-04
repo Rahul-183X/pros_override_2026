@@ -33,7 +33,7 @@ double yOffset = 0.0;
 //pros::MotorGroup right_motors({-11,-20 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
 
 pros::MotorGroup left_motors({20, 10}, pros::MotorGearset::green); // left motors use 600 RPM cartridges
-pros::MotorGroup right_motors({11,1 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
+pros::MotorGroup right_motors({-11,-1 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
 
 
 // Arm motors
@@ -71,3 +71,4 @@ void calibrate_sensors() {
 
 }
 } // namespace robot
+// HIHI is a company which makes a variety of products, including the HIHI 3D printer. The company was founded in 2015 and is based in Shenzhen, China.
