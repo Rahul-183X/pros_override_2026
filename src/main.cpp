@@ -3,10 +3,11 @@
 #include "logger.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
+#include "pros/rtos.hpp"
 #include "robot.hpp"
 #include "motion.hpp"
 #include "tests/test_chassis_stall.hpp"
-
+//#include "pros/api.h"
 #include "lemlib/api.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
 
@@ -103,19 +104,15 @@ void lift_weight() {
 
 void opcontrol() {
 	
-	//create and start the log_to_controller task
-	pros::Task log_to_controller_task_handle(logger::log_to_controller);
-	log_to_controller_task_handle.resume();
-
 	//create and start the lift_weight task
 	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
 	lift_weight_task_handle.resume();
-
-    // loop forever
+//    // loop forever
     while (true) {
         // get left y and right x positions
 		int throttle = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 		int turn = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
 
         // move the robot
         //motion::chassis.curvature(turn, throttle);
@@ -127,6 +124,7 @@ void opcontrol() {
         // delay to save resources
         pros::delay(25);
     }
+		
 }
 
 
@@ -163,15 +161,25 @@ void initialize() {
             //pros::lcd::print(2, "Theta: %f", motion::chassis.getPose().theta); // heading
 
 			
-			pros::lcd::print(0, "X: %0.2f Y: %0.2f Theta: %0.2f", motion::chassis.getPose().x, motion::chassis.getPose().y, motion::chassis.getPose().theta);
+			//pros::lcd::print(0, "X: %0.2f Y: %0.2f Theta: %0.2f", motion::chassis.getPose().x, motion::chassis.getPose().y, motion::chassis.getPose().theta);
 
 			pros::lcd::print(1,"GPS X: %0.2f Y:%0.2f Theta:%0.2f" , robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
 
 
             // delay to save resources
             pros::delay(20);
+			
         }
 	});
+
+
+
+		//create and start the log_to_controller task
+	// pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	// log_to_controller_task_handle.resume();
+
+	pros::Task inertial_sensors_task_handle(logger::log_inertial_sensors);
+	inertial_sensors_task_handle.resume();
 
 } // end of initialize()
 
@@ -222,6 +230,31 @@ void competition_initialize() {
  ASSET(bottom_txt);
 void autonomous() {
 
+	// start the autonomous code here
+	// pros::right_motors.move(127);
+	// pros::left_motors.move(127);
+	//pros::c::motor_move_velocity, const int32_t velocity_unit);
+	while (true) {
+		robot::gps.get_position();
+		// delay for 100 milliseconds
+		pros::delay(100);
+	}
+	//pros::
+
+
+	} // end of autonomous()
+
+
+
+
+
+
+
+
+
+
+
+
 	//create and start the log_to_controller task
 	//pros::Task log_to_controller_task_handle(logger::log_to_controller);
 	//log_to_controller_task_handle.resume();
@@ -238,14 +271,21 @@ void autonomous() {
 
 	motion::chassis.follow(bottom_txt, 10.0, 1000);
 #endif
-	motion::sync_gps_to_lemlib();
+
+
+// I turned the next line off
+	//motion::sync_gps_to_lemlib();
 
 	//    // set position to x:0, y:0, heading:0
     //motion::chassis.setPose(0, 0, 0);
     // turn to face heading 90 with a very long timeout
-    motion::chassis.turnToHeading(90, 10000);
+
+// I turned the next line off
+
+
+    //motion::chassis.turnToHeading(90, 10000);
 	//motion::chassis.moveToPoint(0, 10, 10000);
-}
+
 /* autonomous() is implemented above. */
 
 /**

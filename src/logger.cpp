@@ -1,9 +1,20 @@
 #include "logger.hpp"
+#include "pros/misc.hpp"
 #include "pros/rtos.hpp"
 #include "robot.hpp"
 #include "motion.hpp"
+#include <cstdio>
+#include <string>
 
 namespace logger{
+
+namespace {
+std::string format_2dp(double value) {
+	char buffer[32];
+	std::snprintf(buffer, sizeof(buffer), "%.2f", value);
+	return buffer;
+}
+} // namespace
 
 int date_values[5] = {26, 8, 16, 5, 30};
 int cursor_column = 0;
@@ -225,6 +236,70 @@ void edit_date_screen() {
 	robot::controller.clear_line(2);
 }
 
+/** 
+Definition of the Data_logger_to_sd class constructor, destructor, and save_inertial_sensors_to_sd method.
+ */
+
+	Data_logger_to_sd::Data_logger_to_sd(std::string file_name) {
+			// Constructor logic here
+			// Initialize the date and time for the logger
+			this->file_name = file_name;
+			// append the file name with the current date and then add ".csv" if it doesn't already have it
+			//get the data information from the global namespace
+			int date_snapshot[5];
+			for (int index = 0; index < 5; ++index) {
+				date_snapshot[index] = logger::date_values[index];
+			}
+			char date_stamp[32];
+			std::snprintf(date_stamp, sizeof(date_stamp), "%02d-%02d-%02d-%02d-%02d",
+			              date_snapshot[0], date_snapshot[1], date_snapshot[2],
+			              date_snapshot[3], date_snapshot[4]);
+			
+			this->file_name += "_" + std::string(date_stamp);
+
+			//append the file name with ".csv" if it doesn't already have it
+			if (this->file_name.find(".csv") == std::string::npos) {
+				this->file_name += ".csv";
+				printf(">>>>>!! File name: %s\n", this->file_name.c_str());
+			}
+			
+
+			FILE* log_file = std::fopen(this->file_name.c_str(), "w");
+			
+			if (log_file == nullptr) {
+				robot::controller.set_text(0, 0, "File create failed");
+				return;
+			}
+			else{
+				robot::controller.set_text(0, 0, "File created successfully");
+				printf("File created successfully: %s\n", this->file_name.c_str());
+			}
+			std::fprintf(log_file, "timestamp,drivetrain_imu.x,drivetrain_imu.y,drivetrain_imu.z, gps_imu.x,gps_imu.y,gps_imu.z\n");
+			std::fclose(log_file);
+
+		}
+
+	Data_logger_to_sd::~Data_logger_to_sd() {
+			// Destructor logic here
+			// Close the log file if it was opened
+			FILE* log_file = std::fopen(this->file_name.c_str(), "a");
+			if (log_file != nullptr) {
+				std::fclose(log_file);
+			}
+	}
+		
+	void Data_logger_to_sd::save_inertial_sensors_to_sd(pros::gps_accel_s_t gps_accel, pros::imu_accel_s_t imu_accel){
+			// Logic to save inertial sensor data to the log file
+			FILE* log_file = std::fopen(this->file_name.c_str(), "a");
+			if (log_file != nullptr) {
+				// Example of saving data, replace with actual sensor data retrieval
+				std::fprintf(log_file, "%u,%f,%f,%f,%f,%f,%f\n", static_cast<unsigned>(pros::millis()), imu_accel.x, imu_accel.y, imu_accel.z, gps_accel.x, gps_accel.y, gps_accel.z);
+				std::fclose(log_file);
+			}
+			printf("GPS Acceleration: %f, %f, %f\n", gps_accel.x, gps_accel.y, gps_accel.z);
+			printf("IMU Acceleration: %f, %f, %f\n", imu_accel.x, imu_accel.y, imu_accel.z);
+		}
+	
 
 
 
@@ -236,13 +311,74 @@ void edit_date_screen() {
 		while (true) {
 
 			// log data to the controller screen
-			robot::controller.set_text(0, 0, "X: " + std::to_string(motion::chassis.getPose().x)+ " Y: " + std::to_string(motion::chassis.getPose().y));
+			//robot::controller.set_text(0, 0, "X: " + std::to_string(motion::chassis.getPose().x)+ " Y: " + std::to_string(motion::chassis.getPose().y));
 			pros::delay(100);
 			//robot::controller.set_text(1, 0, "Y: " + std::to_string(motion::chassis.getPose().y));
-			robot::controller.set_text(2, 0, "Theta: " + std::to_string(motion::chassis.getPose().theta));
+			robot::controller.set_text(2, 0, "Theta: " + format_2dp(motion::chassis.getPose().theta));
 			pros::delay(100);
+			
+			robot::controller.set_text(1, 0, "X: " + format_2dp(robot::gps.get_position().x) + " Y: " + format_2dp(robot::gps.get_position().y) + " Theta: " + format_2dp(robot::gps.get_heading()));
+
 		}
 	}
 
+
+
+
+
+
+
+
+	void log_inertial_sensors() {
+		// Implement the logic for inertial sensors here for both the inertial sensor of GPS sensor
+		// and the inertial sensor of the robot itself
+
+		// This code just prints the X, Y, and Z coordinates of the inertial sensors on the brain screen
+		robot::controller.clear();
+		int status = 0;
+		bool to_sd_card = true; //*********** forcing here to save to SD card */
+
+		//initialize the data logger class
+		logger::Data_logger_to_sd log_drivetrain_to_sd("drive_train");
+
+		while (true) {
+			// This section is for the GPS inertial sensor
+			pros::gps_accel_s_t gps_accel = robot::gps.get_accel();
+			pros::imu_accel_s_t imu_accel = robot::drivetrain_imu.get_accel();
+
+			if (to_sd_card) {
+				log_drivetrain_to_sd.save_inertial_sensors_to_sd(gps_accel, imu_accel);
+			}
+			else{
+				// It gets the X, Y, and Z acceleration values from the GPS inertial sensor, and prints it on controller
+				//gps_accel.x, gps_accel.y, gps_accel.z;
+			
+				// robot::controller.set_text(0, 0, "GPS Inertial X: " + format_2dp(robot::gps.get_accel().x));
+				// robot::controller.set_text(1, 0, "GPS Inertial Y: " + format_2dp(robot::gps.get_accel().y));
+				// robot::controller.set_text(2, 0, "GPS Inertial Z: " + format_2dp(robot::gps.get_accel().z));
+
+				status = robot::controller.set_text(0, 0, "GPS X: " + format_2dp(gps_accel.x)+ " Y: " + format_2dp(gps_accel.y)+ " Z: " + format_2dp(gps_accel.z));
+				if (status != 0) {
+					// Handle the error if setting the text fails
+					TRACE("Failed to set GPS inertial sensor text on controller\n");
+				}
+
+				// This section is for the robot's inertial sensor
+				// It gets the X, Y, and Z acceleration values from the robot's inertial sensor, and prints it on controller
+				
+				pros::delay(200);
+			
+				status = robot::controller.set_text(1, 0, "IMU X: " + format_2dp(imu_accel.x)+ " Y: " + format_2dp(imu_accel.y)+ " Z: " + format_2dp(imu_accel.z));
+				if (status != 0) {
+					// Handle the error if setting the text fails
+					TRACE("Failed to set IMU inertial sensor text on controller\n");
+				}
+			// End of combined GPS and IMU inertial sensor display
+			}
+			pros::delay(200);
+			
+		} // end of while(true) loop
+
+	} // log_inertial_sensors
+
 } //namespace logger
-// HIHI is a company which makes a variety of products, including the HIHI 3D printer. The company was founded in 2015 and is based in Shenzhen, China.

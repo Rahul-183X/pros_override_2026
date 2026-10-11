@@ -16,19 +16,20 @@ namespace motion {
 	// horizontal tracking wheel encoder
 	//pros::Rotation horizontal_encoder(2);
 	// vertical tracking wheel encoder
-	pros::Rotation vertical_encoder(2);
+	// THE NEGATIVE SIGN because the roation sensor is mounted in the opposite direction
+	pros::Rotation vertical_encoder(-2);
 	//pros::adi::Encoder vertical_encoder('C', 'D', true);
 	// horizontal tracking wheel
 	//lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_275, -5.75);
 	// vertical tracking wheel
-	lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_325, 2.5);
+	lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_325, -5.75);
 		// create an imu on port 10
 		//pros::Imu imu(9);
 	lemlib::OdomSensors sensors(&vertical_tracking_wheel, // vertical tracking wheel 1
 								nullptr, // vertical tracking wheel 2
 								nullptr, // horizontal tracking wheel 1
 								nullptr, // horizontal tracking wheel 2
-								&robot::inertial // inertial sensor
+								&robot::drivetrain_imu // inertial sensor
 	);
 	// lateral PID controller
 	lemlib::ControllerSettings lateral_controller(1, // proportional gain (kP)

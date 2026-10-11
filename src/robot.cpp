@@ -9,6 +9,7 @@
 #include "pros/motor_group.hpp"
 #include "lemlib/api.hpp"
 #include <cmath>
+#include "motion.hpp"
 
 namespace robot {
 
@@ -17,7 +18,7 @@ const double inch_to_mm = 25.4;
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 //Sensors
-pros::Imu inertial(9);
+pros::Imu drivetrain_imu(9);
 pros::Rotation rotation_sensor(-2); // example rotation sensor on port 2
 pros::GPS gps(3); // example GPS on port 3
 
@@ -25,8 +26,8 @@ pros::GPS gps(3); // example GPS on port 3
 double xInitial = 0.0;
 double yInitial = 0.0;
 double headingInitial = 0.0;
-double xOffset = (-10.5/2.0)*inch_to_mm;
-double yOffset = (10.5/2.0)*inch_to_mm;
+double xOffset = (-10.5/2.0); //*inch_to_mm;
+double yOffset = (10.5/2.0); //*inch_to_mm;
 
 //Actuators
 
@@ -52,7 +53,12 @@ pros::Motor claw(4, pros::MotorGears::red);
 //wheels
 //float_t omniwheel = lemlib::Omniwheel::NEW_325();
 
+// limit switch
+//pros::limitSwitch('A');
 
+// GPS sensor
+
+//pros::Gps::Gps gps(2);
 
 /**
  * Calibrates the robot's sensors.
@@ -62,14 +68,17 @@ pros::Motor claw(4, pros::MotorGears::red);
 void calibrate_sensors() {
 	TRACE("Entering calibrate_sensors\n");
 
-	inertial.reset(false);
-	while (inertial.is_calibrating()) pros::delay(100);
+	drivetrain_imu.reset(false);
+	while (drivetrain_imu.is_calibrating()) pros::delay(100);
 
     rotation_sensor.reset();
     //while (rotation_sensor.is_calibrating()) pros::delay(100);  
 
     gps.initialize_full( xInitial,  yInitial,  headingInitial,  xOffset,  yOffset);
     //while (gps.is_calibrating()) pros::delay(100);  
+
+    //callibrate the chassis with the sensors
+    motion::chassis.calibrate();
 
 }
 } // namespace robot
