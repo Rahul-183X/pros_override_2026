@@ -80,6 +80,7 @@ void calibrate_sensors() {
     //callibrate the chassis with the sensors
     motion::chassis.calibrate();
 
+    motion::sync_gps_to_lemlib();
+
 }
 } // namespace robot
-// HIHI is a company which makes a variety of products, including the HIHI 3D printer. The company was founded in 2015 and is based in Shenzhen, China.

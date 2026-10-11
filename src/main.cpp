@@ -234,11 +234,25 @@ void autonomous() {
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
-	while (true) {
+	//while (true) {
 		robot::gps.get_position();
 		// delay for 100 milliseconds
 		pros::delay(100);
-	}
+		
+		//motion::chassis.setPose(0, 0, 0);
+     // turn to face heading 90 with a very long timeout
+    	//motion::chassis.turnToHeading(90, 10000);
+         //motion::chassis.moveToPose(0, 10, 0,1000);
+        //motion::chassis.moveToPoint(0, 10, 10000);
+
+		    // // set position to x:0, y:0, heading:0
+	    //motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
+		// // turn to face heading 90 with a very long timeout
+		motion::chassis.turnToHeading(90, 1000);
+		// motion::chassis.moveToPoint(0, 48, 1000);
+
+		//motion::chassis.follow(bottom_txt, 10.0, 1000);
+	//}
 	//pros::
 
 
