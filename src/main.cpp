@@ -22,7 +22,7 @@ void lift_weight() {
 	robot::controller.clear_line(1);
 	robot::controller.clear_line(2);
 
-	while (true) {
+	while (!robot::stop_requested.load()) {
 				int throttle = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
 		int turn = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 
@@ -103,12 +103,19 @@ void lift_weight() {
 
 
 void opcontrol() {
+	// Once X has halted the application, do not restart driver-control tasks.
+	if (robot::stop_requested.load()) return;
 	
 	//create and start the lift_weight task
 	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
 	lift_weight_task_handle.resume();
 //    // loop forever
-    while (true) {
+    while (!robot::stop_requested.load()) {
+		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+			robot::stop_requested.store(true);
+			break;
+		}
+
         // get left y and right x positions
 		int throttle = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 		int turn = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
@@ -124,6 +131,14 @@ void opcontrol() {
         // delay to save resources
         pros::delay(25);
     }
+
+	// This loop can end only after X requested the halt.
+	lift_weight_task_handle.remove();
+	robot::left_motors.move(0);
+	robot::right_motors.move(0);
+	robot::arm.move(0);
+	robot::wrist.move(0);
+	robot::claw.move(0);
 		
 }
 
@@ -154,7 +169,7 @@ void initialize() {
 	
     // print position to brain screen
     pros::Task screen_task([&]() {
-        while (true) {
+		while (!robot::stop_requested.load()) {
             // print robot location to the brain screen
             //pros::lcd::print(0, "X: %f", motion::chassis.getPose().x); // x
             //pros::lcd::print(1, "Y: %f", motion::chassis.getPose().y); // y
@@ -191,6 +206,7 @@ void initialize() {
  */
 void disabled() {
 	TRACE("Entering disabled\n");
+	if (robot::stop_requested.load()) return;
 	// run Torque test opcontrol when disabled
 	//tester::test_opcontrol();
 	
@@ -234,7 +250,7 @@ void autonomous() {
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
-	while (true) {
+	while (!robot::stop_requested.load()) {
 		robot::gps.get_position();
 		// delay for 100 milliseconds
 		pros::delay(100);

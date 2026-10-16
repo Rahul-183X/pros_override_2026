@@ -13,6 +13,8 @@
 
 namespace robot {
 
+std::atomic<bool> stop_requested{false};
+
 const double inch_to_mm = 25.4;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
