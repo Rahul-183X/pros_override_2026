@@ -635,7 +635,7 @@
       }
     },
     "upload_options": {
-      "description": "Testing auton  1",
+      "description": "auton tests",
       "slot": 1
     },
     "use_early_access": false

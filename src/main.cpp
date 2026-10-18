@@ -250,11 +250,23 @@ void autonomous() {
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
-	while (!robot::stop_requested.load()) {
-		robot::gps.get_position();
-		// delay for 100 milliseconds
-		pros::delay(100);
-	}
+	if (robot::stop_requested.load()) return;
+	robot::gps.get_position();
+	//delay for 100 milliseconds
+	pros::delay(100);
+
+	//motion::chassis.setPose(0, 0, 0);
+	// turn to face heading 90 with a very long timeout
+	//motion::chassis.turnToHeading(90, 10000);
+	//motion::chassis.moveToPose(0, 10, 0, 1000);
+	//motion::chassis.moveToPoint(0, 10, 10000);
+
+	// Set the initial pose from the GPS sensor once, not continuously.
+	//motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
+	// Turn to face heading 90 once.
+	motion::chassis.turnToHeading(90, 1000);
+	//motion::chassis.moveToPoint(0, 48, 1000);
+	//motion::chassis.follow(bottom_txt, 10.0, 1000);
 	//pros::
 
 
