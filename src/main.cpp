@@ -103,6 +103,8 @@ void lift_weight() {
 
 
 void opcontrol() {
+
+	aut
 	// Once X has halted the application, do not restart driver-control tasks.
 	if (robot::stop_requested.load()) return;
 	
