@@ -309,6 +309,7 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 	void log_to_controller() {
 		//pros::delay(30000);
 		robot::controller.clear();
+		double initial = robot::gps.get_heading();
 		while (!robot::stop_requested.load()) {
 
 			// log data to the controller screen
@@ -317,9 +318,9 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 			//robot::controller.set_text(1, 0, "Y: " + std::to_string(motion::chassis.getPose().y));
 			robot::controller.set_text(2, 0, "Theta: " + format_2dp(motion::chassis.getPose().theta));
 			pros::delay(100);
-			
-			robot::controller.set_text(1, 0, "X: " + format_2dp(robot::gps.get_position().x) + " Y: " + format_2dp(robot::gps.get_position().y) + " Theta: " + format_2dp(robot::gps.get_heading()));
-
+			robot::controller.set_text(0, 0, " i:" + format_2dp(initial) + " c: " + format_2dp(robot::gps.get_heading()));
+			//robot::controller.set_text(1, 0, "X: " + format_2dp(robot::gps.get_position().x) + " Y: " + format_2dp(robot::gps.get_position().y) + " Theta: " + format_2dp(robot::gps.get_heading()));
+			//robot::controller.set_text(2, 0, " Theta: " + format_2dp(robot::gps.get_heading())+ " " + " ");
 		}
 	}
 

@@ -18,7 +18,7 @@ namespace Wall_e{
 void lift_weight() {
 	robot::arm_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	robot::arm_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	robot::controller.set_text(0, 0, "Arm logging");
+	//robot::controller.set_text(0, 0, "Arm logging");
 	robot::controller.clear_line(1);
 	robot::controller.clear_line(2);
 
@@ -103,8 +103,7 @@ void lift_weight() {
 
 
 void opcontrol() {
-
-	aut
+	autonomous(); // run autonomous code in opcontrol for testing purposes
 	// Once X has halted the application, do not restart driver-control tasks.
 	if (robot::stop_requested.load()) return;
 	
@@ -192,8 +191,8 @@ void initialize() {
 
 
 		//create and start the log_to_controller task
-	// pros::Task log_to_controller_task_handle(logger::log_to_controller);
-	// log_to_controller_task_handle.resume();
+	 pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	 log_to_controller_task_handle.resume();
 
 	pros::Task inertial_sensors_task_handle(logger::log_inertial_sensors);
 	inertial_sensors_task_handle.resume();
@@ -266,7 +265,7 @@ void autonomous() {
 	// Set the initial pose from the GPS sensor once, not continuously.
 	//motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
 	// Turn to face heading 90 once.
-	motion::chassis.turnToHeading(90, 1000);
+	motion::chassis.turnToHeading(90, 5000);
 	//motion::chassis.moveToPoint(0, 48, 1000);
 	//motion::chassis.follow(bottom_txt, 10.0, 1000);
 	//pros::

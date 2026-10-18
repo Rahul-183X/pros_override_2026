@@ -44,7 +44,7 @@ namespace motion {
 	);
 
 	// angular PID controller
-	lemlib::ControllerSettings angular_controller(1, // proportional gain (kP)
+	lemlib::ControllerSettings angular_controller(2.5, // proportional gain (kP)
 												0, // integral gain (kI)
 												2, // derivative gain (kD)
 												0, // anti windup
