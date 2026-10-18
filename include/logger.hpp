@@ -8,6 +8,7 @@
 #pragma once
 
 #include "main.h"
+#include "robot.hpp"
 #include <string>
 
 namespace logger{
@@ -33,5 +34,7 @@ namespace logger{
         Data_logger_to_sd(std::string file_name);
         ~Data_logger_to_sd();
         void save_inertial_sensors_to_sd(pros::gps_accel_s_t gps_accel, pros::imu_accel_s_t imu_accel);
+        //void save_claw_sensors_to_sd(robot::motor claw_gripper, robot::motor claw);
+        void save_arm_to_sd();
     };
 }

@@ -1,0 +1,25 @@
+-0.824, -69.32, 89.997
+-2.221, -67.888, 87.129
+-3.617, -66.457, 84.163
+-5.014, -65.025, 81.089
+-6.411, -63.594, 77.894
+-7.807, -62.162, 74.562
+-9.204, -60.73, 71.074
+-10.6, -59.299, 67.405
+-11.997, -57.867, 63.525
+-13.394, -56.436, 59.392
+-14.79, -55.004, 54.95
+-16.187, -53.573, 50.114
+-17.584, -52.141, 44.76
+-18.98, -50.71, 38.671
+-20.377, -49.278, 31.424
+-21.774, -47.846, 21.896
+-23.092, -46.495, 0
+-23.092, -46.495, 0
+-37.058, -32.18, 0
+endData
+127
+100
+200
+-0.824, -69.32, -11.958, -57.908, -11.958, -57.908, -23.092, -46.495
+#PATH.JERRYIO-DATA {"appVersion":"0.11.0","format":"LemLib v0.5","gc":{"robotWidth":11.811023622047244,"robotHeight":11.811023622047244,"robotIsHolonomic":false,"showRobot":true,"uol":2.54,"pointDensity":2,"controlMagnetDistance":1.968503937007874,"fieldImage":{"displayName":"V5RC 2027 - Override","signature":"V5RC-Override-H2H-TopDownHighlighted-TileColor66_71","origin":{"__type":"built-in"}},"coordinateSystem":"VEX Gaming Positioning System"},"paths":[{"segments":[{"controls":[{"uid":"NOHEsXP1Qd","x":-0.8239112278347125,"y":-69.31988249322913,"lock":false,"visible":true,"heading":0,"__type":"end-point"},{"uid":"8JNNnezoZ1","x":-23.09178225039466,"y":-46.495314695105186,"lock":false,"visible":true,"heading":0,"__type":"end-point"}],"speedProfiles":[],"lookaheadKeyframes":[],"uid":"Xe50yOiLdQ"}],"pc":{"speedLimit":{"minLimit":{"value":0,"label":"0"},"maxLimit":{"value":127,"label":"127"},"step":1,"from":20,"to":100},"bentRateApplicableRange":{"minLimit":{"value":0,"label":"0"},"maxLimit":{"value":1,"label":"1"},"step":0.001,"from":0,"to":0.1},"maxDecelerationRate":127},"name":"Path","uid":"XWSR4aatBw","lock":false,"visible":true}]}

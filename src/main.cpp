@@ -22,17 +22,21 @@ void lift_weight() {
 	robot::controller.clear_line(1);
 	robot::controller.clear_line(2);
 
+	robot::claw_gripper.move_velocity(90);
+
 	while (true) {
 				int throttle = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
 		int turn = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 
-		if (robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)> 0) {
+		robot::claw_gripper.move_velocity(90);
+
+		if (robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)> 5) {
 			//robot::arm_left.move_velocity(50);
 			//robot::arm_right.move_velocity(50);
 			//robot::arm.move_velocity(50);
 			robot::arm.move_velocity(100);
 
-		} else if (robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) < 0) {
+		} else if (robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) < -5) {
 			//robot::arm_left.move_velocity(50);
 			//robot::arm_right.move_velocity(50);
 			robot::arm.move_velocity(-100);
@@ -103,6 +107,9 @@ void lift_weight() {
 
 
 void opcontrol() {
+
+	autonomous();
+	
 	
 	//create and start the lift_weight task
 	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
@@ -181,6 +188,15 @@ void initialize() {
 	pros::Task inertial_sensors_task_handle(logger::log_inertial_sensors);
 	inertial_sensors_task_handle.resume();
 
+	pros::Task sd_logger_arm_task_handle([&]() {
+		logger::Data_logger_to_sd log_arm_to_sd("arm_log");
+		while (true) {
+			log_arm_to_sd.save_arm_to_sd();
+			pros::delay(100); // Log every 100 ms
+		}
+	});
+	sd_logger_arm_task_handle.resume();
+
 } // end of initialize()
 
 
@@ -227,13 +243,14 @@ void competition_initialize() {
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
- ASSET(bottom_txt);
+ ASSET(red_goal_3_txt);
 void autonomous() {
 
 	// start the autonomous code here
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
+	
 	//while (true) {
 		robot::gps.get_position();
 		// delay for 100 milliseconds
@@ -248,10 +265,13 @@ void autonomous() {
 		    // // set position to x:0, y:0, heading:0
 	    //motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
 		// // turn to face heading 90 with a very long timeout
-		motion::chassis.turnToHeading(90, 1000);
-		// motion::chassis.moveToPoint(0, 48, 1000);
+		//motion::chassis.turnToHeading(90, 1000);
+		// convert the GPS position in mm to inches and set the chassis pose
 
-		//motion::chassis.follow(bottom_txt, 10.0, 1000);
+		//motion::chassis.moveToPoint(-600 * robot::mm_to_inch, -1200 * robot::mm_to_inch	, 1000);
+
+		//motion::chassis.follow(red_goal_3_txt, 10.0, 10000);
+
 	//}
 	//pros::
 

@@ -13,9 +13,13 @@ extern pros::Motor arm_right;
 extern pros::Motor wrist;
 extern pros::Motor claw;
 extern pros::MotorGroup arm;
+extern pros::Motor claw_gripper;
 
 
 extern pros::GPS gps;
+
+extern const double inch_to_mm;
+extern const double mm_to_inch;
 
 void calibrate_sensors();
 } // namespace robot

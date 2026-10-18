@@ -274,7 +274,7 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 				robot::controller.set_text(0, 0, "File created successfully");
 				printf("File created successfully: %s\n", this->file_name.c_str());
 			}
-			std::fprintf(log_file, "timestamp,drivetrain_imu.x,drivetrain_imu.y,drivetrain_imu.z, gps_imu.x,gps_imu.y,gps_imu.z\n");
+			//std::fprintf(log_file, "timestamp,drivetrain_imu.x,drivetrain_imu.y,drivetrain_imu.z, gps_imu.x,gps_imu.y,gps_imu.z\n");
 			std::fclose(log_file);
 
 		}
@@ -292,6 +292,11 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 			// Logic to save inertial sensor data to the log file
 			FILE* log_file = std::fopen(this->file_name.c_str(), "a");
 			if (log_file != nullptr) {
+				//check if the file is empty, if it is empty, write the header
+				fseek(log_file, 0, SEEK_END);
+				if (ftell(log_file) == 0) {
+					std::fprintf(log_file, "timestamp,drivetrain_imu.x,drivetrain_imu.y,drivetrain_imu.z, gps_imu.x,gps_imu.y,gps_imu.z\n");
+				}
 				// Example of saving data, replace with actual sensor data retrieval
 				std::fprintf(log_file, "%u,%f,%f,%f,%f,%f,%f\n", static_cast<unsigned>(pros::millis()), imu_accel.x, imu_accel.y, imu_accel.z, gps_accel.x, gps_accel.y, gps_accel.z);
 				std::fclose(log_file);
@@ -300,7 +305,43 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 			printf("IMU Acceleration: %f, %f, %f\n", imu_accel.x, imu_accel.y, imu_accel.z);
 		}
 	
+		#if 0
+		void Data_logger_to_sd::save_claw_sensors_to_sd(pros::motor claw_gripper, pros::motor claw){
+			// Logic to save inertial sensor data to the log file
+			FILE* log_file = std::fopen(this->file_name.c_str(), "a");
 
+			if (log_file != nullptr) {
+				//check if the file is empty, if it is empty, write the header
+				fseek(log_file, 0, SEEK_END);
+				if (ftell(log_file) == 0) {
+					std::fprintf(log_file, "timestamp,claw_gripper_position,claw_position,\n");
+				}
+
+				// Example of saving data, replace with actual sensor data retrieval
+				std::fprintf(log_file, "%u,%f,%f,%f,%f,%f,%f\n", static_cast<unsigned>(pros::millis()), claw_gripper.get_position(), claw.get_position(), imu_accel.x, imu_accel.y, imu_accel.z, gps_accel.x);
+				std::fclose(log_file);
+			}
+		}
+		#endif
+
+		void Data_logger_to_sd::save_arm_to_sd(){
+			// Logic to save inertial sensor data to the log file
+			FILE* log_file = std::fopen(this->file_name.c_str(), "a");
+
+			if (log_file != nullptr) {
+				//check if the file is empty, if it is empty, write the header
+				fseek(log_file, 0, SEEK_END);
+				if (ftell(log_file) == 0) {
+					std::fprintf(log_file, "timestamp,arm_left_position,arm_left_velocity,arm_left_torque,arm_left_power,arm_left_current,arm_left_temperature,arm_right_position,arm_right_velocity,arm_right_torque,arm_right_power,arm_right_current,arm_right_temperature\n");
+				}
+
+				// Example of saving data, replace with actual sensor data retrieval
+				std::fprintf(log_file, "%u,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", static_cast<unsigned>(pros::millis()), robot::arm_left.get_position(), robot::arm_left.get_actual_velocity(), robot::arm_left.get_torque(), robot::arm_left.get_power(), robot::arm_left.get_current_draw() / 1000.0, robot::arm_left.get_temperature(),\
+					 robot::arm_right.get_position(), robot::arm_right.get_actual_velocity(), robot::arm_right.get_torque(), robot::arm_right.get_power(), robot::arm_right.get_current_draw() / 1000.0, robot::arm_right.get_temperature());
+
+				std::fclose(log_file);
+			}
+		}
 
 
 

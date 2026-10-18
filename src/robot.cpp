@@ -14,6 +14,7 @@
 namespace robot {
 
 const double inch_to_mm = 25.4;
+const double mm_to_inch = 1.0 / inch_to_mm;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
@@ -49,6 +50,9 @@ pros::Motor wrist(5, pros::MotorGears::red);
 
 // Claw motors
 pros::Motor claw(4, pros::MotorGears::red); 
+
+//claw gripper motors
+pros::Motor claw_gripper(-16, pros::MotorGears::red);
 
 //wheels
 //float_t omniwheel = lemlib::Omniwheel::NEW_325();
