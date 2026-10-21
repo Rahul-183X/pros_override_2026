@@ -250,7 +250,6 @@ void autonomous() {
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
-	
 	//while (true) {
 		robot::gps.get_position();
 		// delay for 100 milliseconds
