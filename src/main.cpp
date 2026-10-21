@@ -18,13 +18,13 @@ namespace Wall_e{
 void lift_weight() {
 	robot::arm_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	robot::arm_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	robot::controller.set_text(0, 0, "Arm logging");
+	//robot::controller.set_text(0, 0, "Arm logging");
 	robot::controller.clear_line(1);
 	robot::controller.clear_line(2);
 
 	robot::claw_gripper.move_velocity(90);
 
-	while (true) {
+	while (!robot::stop_requested.load()) {
 				int throttle = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
 		int turn = -robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 
@@ -107,15 +107,20 @@ void lift_weight() {
 
 
 void opcontrol() {
-
-	autonomous();
-	
+	autonomous(); // run autonomous code in opcontrol for testing purposes
+	// Once X has halted the application, do not restart driver-control tasks.
+	if (robot::stop_requested.load()) return;
 	
 	//create and start the lift_weight task
 	pros::Task lift_weight_task_handle(Wall_e::lift_weight);
 	lift_weight_task_handle.resume();
 //    // loop forever
-    while (true) {
+    while (!robot::stop_requested.load()) {
+		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+			robot::stop_requested.store(true);
+			break;
+		}
+
         // get left y and right x positions
 		int throttle = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 		int turn = robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
@@ -131,6 +136,14 @@ void opcontrol() {
         // delay to save resources
         pros::delay(25);
     }
+
+	// This loop can end only after X requested the halt.
+	lift_weight_task_handle.remove();
+	robot::left_motors.move(0);
+	robot::right_motors.move(0);
+	robot::arm.move(0);
+	robot::wrist.move(0);
+	robot::claw.move(0);
 		
 }
 
@@ -161,7 +174,7 @@ void initialize() {
 	
     // print position to brain screen
     pros::Task screen_task([&]() {
-        while (true) {
+		while (!robot::stop_requested.load()) {
             // print robot location to the brain screen
             //pros::lcd::print(0, "X: %f", motion::chassis.getPose().x); // x
             //pros::lcd::print(1, "Y: %f", motion::chassis.getPose().y); // y
@@ -182,8 +195,8 @@ void initialize() {
 
 
 		//create and start the log_to_controller task
-	// pros::Task log_to_controller_task_handle(logger::log_to_controller);
-	// log_to_controller_task_handle.resume();
+	 pros::Task log_to_controller_task_handle(logger::log_to_controller);
+	 log_to_controller_task_handle.resume();
 
 	pros::Task inertial_sensors_task_handle(logger::log_inertial_sensors);
 	inertial_sensors_task_handle.resume();
@@ -207,6 +220,7 @@ void initialize() {
  */
 void disabled() {
 	TRACE("Entering disabled\n");
+	if (robot::stop_requested.load()) return;
 	// run Torque test opcontrol when disabled
 	//tester::test_opcontrol();
 	
@@ -250,28 +264,23 @@ void autonomous() {
 	// pros::right_motors.move(127);
 	// pros::left_motors.move(127);
 	//pros::c::motor_move_velocity, const int32_t velocity_unit);
-	//while (true) {
-		robot::gps.get_position();
-		// delay for 100 milliseconds
-		pros::delay(100);
-		
-		//motion::chassis.setPose(0, 0, 0);
-     // turn to face heading 90 with a very long timeout
-    	//motion::chassis.turnToHeading(90, 10000);
-         //motion::chassis.moveToPose(0, 10, 0,1000);
-        //motion::chassis.moveToPoint(0, 10, 10000);
+	if (robot::stop_requested.load()) return;
+	robot::gps.get_position();
+	//delay for 100 milliseconds
+	pros::delay(100);
 
-		    // // set position to x:0, y:0, heading:0
-	    //motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
-		// // turn to face heading 90 with a very long timeout
-		//motion::chassis.turnToHeading(90, 1000);
-		// convert the GPS position in mm to inches and set the chassis pose
+	//motion::chassis.setPose(0, 0, 0);
+	// turn to face heading 90 with a very long timeout
+	//motion::chassis.turnToHeading(90, 10000);
+	//motion::chassis.moveToPose(0, 10, 0, 1000);
+	//motion::chassis.moveToPoint(0, 10, 10000);
 
-		//motion::chassis.moveToPoint(-600 * robot::mm_to_inch, -1200 * robot::mm_to_inch	, 1000);
-
-		//motion::chassis.follow(red_goal_3_txt, 10.0, 10000);
-
-	//}
+	// Set the initial pose from the GPS sensor once, not continuously.
+	//motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
+	// Turn to face heading 90 once.
+	motion::chassis.turnToHeading(90, 5000);
+	//motion::chassis.moveToPoint(0, 48, 1000);
+	//motion::chassis.follow(bottom_txt, 10.0, 1000);
 	//pros::
 
 
@@ -334,4 +343,5 @@ void autonomous() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+ 
  // HIHI is a company which makes a variety of products, including the HIHI 3D printer. The company was founded in 2015 and is based in Shenzhen, China.

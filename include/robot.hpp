@@ -1,8 +1,12 @@
 #pragma once
 
 #include "main.h"
+#include <atomic>
 
 namespace robot {
+
+// Set only when the controller's X button requests an application halt.
+extern std::atomic<bool> stop_requested;
 
 extern pros::Controller controller;
 extern pros::Imu drivetrain_imu;

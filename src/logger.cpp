@@ -181,7 +181,8 @@ void edit_date_screen() {
 	std::uint32_t last_blink = pros::millis();
 	show_date();
 
-	while (pros::millis() - start < 300000 && !log_file_created) {
+	while (pros::millis() - start < 300000 && !log_file_created &&
+	       !robot::stop_requested.load()) {
 		//TRACE("Entering edit_date_screen loop\n");
 
 		const std::uint32_t now = pros::millis();
@@ -349,7 +350,8 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 	void log_to_controller() {
 		//pros::delay(30000);
 		robot::controller.clear();
-		while (true) {
+		double initial = robot::gps.get_heading();
+		while (!robot::stop_requested.load()) {
 
 			// log data to the controller screen
 			//robot::controller.set_text(0, 0, "X: " + std::to_string(motion::chassis.getPose().x)+ " Y: " + std::to_string(motion::chassis.getPose().y));
@@ -357,9 +359,9 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 			//robot::controller.set_text(1, 0, "Y: " + std::to_string(motion::chassis.getPose().y));
 			robot::controller.set_text(2, 0, "Theta: " + format_2dp(motion::chassis.getPose().theta));
 			pros::delay(100);
-			
-			robot::controller.set_text(1, 0, "X: " + format_2dp(robot::gps.get_position().x) + " Y: " + format_2dp(robot::gps.get_position().y) + " Theta: " + format_2dp(robot::gps.get_heading()));
-
+			robot::controller.set_text(0, 0, " i:" + format_2dp(initial) + " c: " + format_2dp(robot::gps.get_heading()));
+			//robot::controller.set_text(1, 0, "X: " + format_2dp(robot::gps.get_position().x) + " Y: " + format_2dp(robot::gps.get_position().y) + " Theta: " + format_2dp(robot::gps.get_heading()));
+			//robot::controller.set_text(2, 0, " Theta: " + format_2dp(robot::gps.get_heading())+ " " + " ");
 		}
 	}
 
@@ -382,7 +384,7 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 		//initialize the data logger class
 		logger::Data_logger_to_sd log_drivetrain_to_sd("drive_train");
 
-		while (true) {
+		while (!robot::stop_requested.load()) {
 			// This section is for the GPS inertial sensor
 			pros::gps_accel_s_t gps_accel = robot::gps.get_accel();
 			pros::imu_accel_s_t imu_accel = robot::drivetrain_imu.get_accel();

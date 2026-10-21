@@ -13,6 +13,8 @@
 
 namespace robot {
 
+std::atomic<bool> stop_requested{false};
+
 const double inch_to_mm = 25.4;
 const double mm_to_inch = 1.0 / inch_to_mm;
 
