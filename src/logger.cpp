@@ -365,13 +365,6 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 		}
 	}
 
-
-
-
-
-
-
-
 	void log_inertial_sensors() {
 		// Implement the logic for inertial sensors here for both the inertial sensor of GPS sensor
 		// and the inertial sensor of the robot itself
@@ -423,5 +416,21 @@ Definition of the Data_logger_to_sd class constructor, destructor, and save_iner
 		} // end of while(true) loop
 
 	} // log_inertial_sensors
+
+	void log_auton() {
+		// Implement the logic for logging autonomous data here
+		// This function can be used to log data during autonomous mode
+		// For example, you can log the robot's position, sensor readings, etc.
+		FILE* log_file = std::fopen("auton_log.csv", "w");
+		if (log_file == nullptr) {
+			robot::controller.set_text(0, 0, "File create failed");
+			return;
+		}
+		std::fprintf(log_file, "timestamp,position_x,position_y,heading\n");
+		while (!robot::stop_requested.load()) {
+			// Log autonomous data here
+			pros::delay(100);
+		}
+	} // log_auton
 
 } //namespace logger

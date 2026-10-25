@@ -6,16 +6,20 @@
 #include "pros/rtos.hpp"
 #include "robot.hpp"
 #include "motion.hpp"
+#include "field.hpp"
 #include "tests/test_chassis_stall.hpp"
 //#include "pros/api.h"
 #include "lemlib/api.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
+#include <algorithm>
 
 namespace Wall_e{
 
 
 
 void lift_weight() {
+	double claw_position;
+	double arm_position;
 	robot::arm_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	robot::arm_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	//robot::controller.set_text(0, 0, "Arm logging");
@@ -35,15 +39,19 @@ void lift_weight() {
 			//robot::arm_right.move_velocity(50);
 			//robot::arm.move_velocity(50);
 			robot::arm.move_velocity(100);
+			TRACE("arm position %f \n", robot::arm.get_position(0));
 
 		} else if (robot::controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) < -5) {
 			//robot::arm_left.move_velocity(50);
 			//robot::arm_right.move_velocity(50);
 			robot::arm.move_velocity(-100);
+			TRACE("arm position %f \n", robot::arm.get_position(0));
+
 		} else {
 			//robot::arm_left.move_velocity(0);
 			//robot::arm_right.move_velocity(0);
 			robot::arm.move_velocity(0);
+			TRACE("arm position %f \n", robot::arm.get_position(0));
 		}
 
 		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
@@ -60,10 +68,14 @@ void lift_weight() {
 			robot::claw.move_velocity(100);
 		} else if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
 			robot::claw.move_velocity(-100);
+			 claw_position = robot::claw.get_position();
+			 TRACE("Claw position: %f\n", claw_position);
 		} else {
 			robot::claw.move_velocity(0);
 			robot::claw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 			robot::claw.brake();
+			 claw_position = robot::claw.get_position();
+			TRACE("Claw position @ not pressed: %f\n", claw_position);
 		}
 
 
@@ -107,7 +119,7 @@ void lift_weight() {
 
 
 void opcontrol() {
-	autonomous(); // run autonomous code in opcontrol for testing purposes
+	//autonomous(); // run autonomous code in opcontrol for testing purposes
 	// Once X has halted the application, do not restart driver-control tasks.
 	if (robot::stop_requested.load()) return;
 	
@@ -117,7 +129,7 @@ void opcontrol() {
 //    // loop forever
     while (!robot::stop_requested.load()) {
 		if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-			robot::stop_requested.store(true);
+			robot::stop_requested.store(false); ///////!!!!!!!!!!
 			break;
 		}
 
@@ -198,9 +210,10 @@ void initialize() {
 	 pros::Task log_to_controller_task_handle(logger::log_to_controller);
 	 log_to_controller_task_handle.resume();
 
+
 	pros::Task inertial_sensors_task_handle(logger::log_inertial_sensors);
 	inertial_sensors_task_handle.resume();
-
+	#if 0
 	pros::Task sd_logger_arm_task_handle([&]() {
 		logger::Data_logger_to_sd log_arm_to_sd("arm_log");
 		while (true) {
@@ -209,6 +222,7 @@ void initialize() {
 		}
 	});
 	sd_logger_arm_task_handle.resume();
+	#endif
 
 } // end of initialize()
 
@@ -278,8 +292,24 @@ void autonomous() {
 	// Set the initial pose from the GPS sensor once, not continuously.
 	//motion::chassis.setPose(robot::gps.get_position().x, robot::gps.get_position().y, robot::gps.get_heading());
 	// Turn to face heading 90 once.
-	motion::chassis.turnToHeading(90, 5000);
-	//motion::chassis.moveToPoint(0, 48, 1000);
+	//motion::chassis.turnToHeading(90, 5000);
+	//std::move(motion::chassis).moveToPoint(0, 10, 5000);
+	//motion::chassis.moveToPose(red_goal_3[0]*robot::mm_to_inch, red_goal_3[1]*robot::mm_to_inch, 0, 1000);
+	TRACE("Autonomous started\n");
+
+	// while(true){
+	TRACE("motion::chassis.getPose().x: %f, motion::chassis.getPose().y: %f, motion::chassis.getPose().theta: %f\n", motion::chassis.getPose().x, motion::chassis.getPose().y, motion::chassis.getPose().theta);
+	// //print the motor encoder values to the console
+	// TRACE("Left motors encoder: %f, Right motors encoder: %f\n", robot::left_motors.get_position(), robot::right_motors.get_position());
+	
+	// pros::delay(200);
+	// }
+	
+
+	robot::arm.move_relative(10, 100);
+	motion::chassis.moveToPoint(0, 10, 5000);
+	pros::delay(2000);
+	robot::claw.move_absolute( 85, 30);
 	//motion::chassis.follow(bottom_txt, 10.0, 1000);
 	//pros::
 
