@@ -17,6 +17,8 @@ std::atomic<bool> stop_requested{false};
 
 const double inch_to_mm = 25.4;
 const double mm_to_inch = 1.0 / inch_to_mm;
+const double inch_to_m = 0.0254;
+const double m_to_inch = 1.0 / inch_to_m;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
@@ -29,8 +31,8 @@ pros::GPS gps(3); // example GPS on port 3
 double xInitial = 0.0;
 double yInitial = 0.0;
 double headingInitial = 0.0;
-double xOffset = (-10.5/2.0); //*inch_to_mm;
-double yOffset = (10.5/2.0); //*inch_to_mm;
+double xOffset = 0.0;//(-10.5/2.0); //*inch_to_mm;
+double yOffset = 0.0;//(10.5/2.0); //*inch_to_mm;
 
 //Actuators
 
@@ -38,7 +40,7 @@ double yOffset = (10.5/2.0); //*inch_to_mm;
 //pros::MotorGroup left_motors({1, 10}, pros::MotorGearset::green); // left motors use 600 RPM cartridges
 //pros::MotorGroup right_motors({-11,-20 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
 
-pros::MotorGroup left_motors({-11,- 1}, pros::MotorGearset::green); // left motors use 600 RPM cartridges
+pros::MotorGroup left_motors({-11,- 1}, pros::MotorGearset::green); // left motors use 200 RPM cartridges
 pros::MotorGroup right_motors({20,10 }, pros::MotorGearset::green); // right motors use 200 RPM cartridges
 
 

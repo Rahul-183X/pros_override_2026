@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "auton_tests",
+    "project_name": "DNI",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -635,8 +635,9 @@
       }
     },
     "upload_options": {
-      "description": "auton tests",
-      "slot": 3
+      "description": "",
+      "slot": 1,
+      "icon": "pros"
     },
     "use_early_access": false
   }

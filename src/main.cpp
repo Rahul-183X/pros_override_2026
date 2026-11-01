@@ -119,7 +119,7 @@ void lift_weight() {
 
 
 void opcontrol() {
-	//autonomous(); // run autonomous code in opcontrol for testing purposes
+	autonomous(); // run autonomous code in opcontrol for testing purposes
 	// Once X has halted the application, do not restart driver-control tasks.
 	if (robot::stop_requested.load()) return;
 	
@@ -298,13 +298,25 @@ void autonomous() {
 	TRACE("Autonomous started\n");
 
 	// while(true){
-	TRACE("motion::chassis.getPose().x: %f, motion::chassis.getPose().y: %f, motion::chassis.getPose().theta: %f\n", motion::chassis.getPose().x, motion::chassis.getPose().y, motion::chassis.getPose().theta);
+	TRACE("motion::chassis.getPose().x * robot::mm_to_inch: %f, motion::chassis.getPose().y * robot::mm_to_inch: %f, motion::chassis.getPose().theta: %f\n", motion::chassis.getPose().x * robot::mm_to_inch, motion::chassis.getPose().y * robot::mm_to_inch, motion::chassis.getPose().theta);
+	
+	TRACE("robot::gps.get_position().x * robot::mm_to_inch: %f, robot::gps.get_position().y * robot::mm_to_inch: %f, robot::gps.get_heading(): %f\n", robot::gps.get_position().x * robot::mm_to_inch, robot::gps.get_position().y * robot::mm_to_inch, robot::gps.get_heading());
+	const double inch_to_m = 0.0254;
+
+	const double inch_to_mm = 25.4;
+	const double mm_to_inch = 1.0 / inch_to_mm;
+	const double m_to_inch = 1.0 / inch_to_m;
+
+	TRACE("difference in x: %f, difference in y: %f, difference in heading: %f\n", motion::chassis.getPose().x - robot::gps.get_position().x, motion::chassis.getPose().y - robot::gps.get_position().y, motion::chassis.getPose().theta - robot::gps.get_heading());
 	// //print the motor encoder values to the console
 	// TRACE("Left motors encoder: %f, Right motors encoder: %f\n", robot::left_motors.get_position(), robot::right_motors.get_position());
 	
 	// pros::delay(200);
 	// }
-	
+	pros::delay(2000);
+	//!!!!!!!!!!!!!!!!!!!!!!!!! no execution after this line, so the robot will not move after this point. This is a temporary measure to prevent the robot from moving during testing. The line can be removed when the autonomous code is ready to be tested.
+	//if (robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_X) and robot::controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+	exit(0); // Exit the autonomous function to prevent further execution
 
 	robot::arm.move_relative(10, 100);
 	motion::chassis.moveToPoint(0, 10, 5000);
